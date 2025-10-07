@@ -182,11 +182,27 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
     try:
         df = pd.read_excel(uploaded_file)
-        required_columns = ["NAME", "Updated Title", "CATEGORY"]
+
+        # ✅ Normalize column names (case-insensitive, remove extra spaces)
+        df.columns = df.columns.str.strip().str.lower()
+
+        # ✅ Define required columns in lowercase
+        required_columns = ["name", "updated title", "category"]
+
+        # ✅ Check for missing columns
         for col in required_columns:
             if col not in df.columns:
                 st.error(f"❌ Missing required column: {col}")
                 st.stop()
+
+        # ✅ Rename back to expected format so rest of code still works
+        df.rename(columns={
+            "name": "NAME",
+            "updated title": "Updated Title",
+            "category": "CATEGORY"
+        }, inplace=True)
+
+        
 
         total_rows = len(df)
         rows_to_process = df["Updated Title"].isna().sum()
