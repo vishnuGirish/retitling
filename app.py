@@ -239,26 +239,21 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Helper function for flexible column detection ---
 def find_column(df, possible_names):
-    """
-    Find a column in the dataframe using flexible matching.
-    Checks for exact match (case-insensitive) or partial match.
-    """
     df_columns_lower = {col.lower(): col for col in df.columns}
-    
+
+    # 1️⃣ Exact match (case-insensitive)
+    for name in possible_names:
+        if name.lower() in df_columns_lower:
+            return df_columns_lower[name.lower()]
+
+    # 2️⃣ Partial match only if exact match not found
     for name in possible_names:
         name_lower = name.lower()
-        
-        # Exact match (case-insensitive)
-        if name_lower in df_columns_lower:
-            return df_columns_lower[name_lower]
-        
-        # Partial match
         for col_lower, col_original in df_columns_lower.items():
-            if name_lower in col_lower or col_lower in name_lower:
+            if name_lower in col_lower and col_lower != name_lower:
                 return col_original
-    
+
     return None
 
 # --- Calculate similarity between two strings ---
