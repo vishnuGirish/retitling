@@ -60,28 +60,31 @@ def correct_luxury_title(product_title: str) -> dict:
        Use null if missing.
     
     3. Generate a corrected luxury product title using official naming conventions:
-       - Handbags: Brand → Style → Size → Color → Material → Subcategory
+       - Handbags: Brand → Style → Size → Color → Material → Subcategory → always end with 'Bag' if missing
        - Shoes: Brand → Style → Size → Color → Material → Subcategory
-       - Watches: Brand → Style → Model Name → Model Reference Number → Dial Color → Case Material → Gemstone → Gender → Wristwatch → Case Diameter
+       - Watches: Use reference number to extract exact model information; include Brand → Style → Model Name → Model Reference Number → Dial Color → Case Material → Gemstone → Gender → Wristwatch → Case Diameter
        - Fine Jewelry: Brand → Style → Serial Number → Movement → Dial Color → Material → Gender → Category → Case Size
     
     4. Important rules:
-       - Always expand the material to its **full official name**
-         (e.g., "Clemence" → "Taurillon Clémence Leather", "Togo" → "Togo Calfskin Leather").
+       - Always expand the material to its **full official name** (e.g., "Clemence" → "Taurillon Clémence Leather", "Togo" → "Togo Calfskin Leather").
        - Color normalization:
          - Extract all colors appearing in the title.
          - If more than 3 distinct colors are mentioned → use "Multicolor".
          - If 3 or fewer colors are mentioned → list them separated by commas, preserving order (e.g., "Black, Beige, Gold").
+         - Avoid repeating "Multicolor" or any color.
          - Use only official luxury color names from the provided list.
          - If no valid color is detected → use null
        - If the material is missing, infer the most likely luxury material.
        - Normalize subcategories:
-         - Use the most specific **subcategory/type** if it is evident from the product title.
+         - Use the most specific **subcategory/type** if evident from the product title.
          - If no specific type is evident, use the main subcategory.
+         - For handbags, always ensure "Bag" is at the end.
+        - Don't repeat the same word twice in the title
+        - The language must be English only — replace any special characters with their correct English letters (e.g., é → e, @ → a, > → g)
     
     5. Handbag Subcategory/Type Selection:
        - Main subcategories: Totes, Belt Bags, Backpacks, Clutches, Crossbody Bags, Shoulder Bags, Satchels, Luggage & Travel, Wallets
-       - Secondary/specific types: Beach, Fanny Pack, Bucket Backpack, Wristlet, Messenger, Hobo, Top Handle Bags, Suitcases, Card Holder, Shopper, Mini Backpacks, Bucket Bag, Saddle, Duffel Bag, Coin Purse, Mini Bag, Briefcases, Long Wallet, Sling Bag, Make-up Bag, Bifold, Laptop Bag, Wallet on Chain, Diaper Bag, Gym Bag
+       - Secondary/specific types: Beach, Fanny Pack, Bucket Backpack, Wristlet, Messenger, Hobo, Top Handle Bags, Suitcases, Card Holder, Shopper, Mini Backpacks, Bucket Bag, Saddle, Duffel Bag, Coin Purse, Mini Bag, Briefcases, Long Wallet, Wallet on Chain, Diaper Bag, Gym Bag
        - Examples:
          - If the title contains “Mini Bag” → use subcategory “Mini Bag”
          - If the title contains “Bucket” → use subcategory “Bucket Bag”
@@ -91,116 +94,21 @@ def correct_luxury_title(product_title: str) -> dict:
     6. Size normalization logic:
     
     ### Louis Vuitton
-    - Nano / Micro → XS
-    - PM → S
-    - MM → M
-    - GM → L
-    - If descriptive words appear like “high sized”, “small”, “large”, or “mini”, map approximately:
-      - Mini / Nano / Micro / Tiny → XS
-      - Small / PM → S
-      - Medium / MM → M
-      - Large / Big / GM / High Sized → L
-    - Always return the **Generic Size (XS/S/M/L)**.
+    - strictly use PM, MM, GM for size if it is in title for Louis Vuitton items.
+    - Nano / Micro → XS, PM → S, MM → M, GM → L
+    - Map descriptive words: Mini/Nano → XS, Small/PM → S, Medium/MM → M, Large/GM → L
+    - Return **Generic Size (XS/S/M/L)** for internal attributes but maintain PM/MM/GM in corrected title.
     
-    ### Goyard
-    - Mini → XS
-    - PM → S
-    - MM → M
-    - GM → L
-    - Always return the **Generic Size (XS/S/M/L)**.
+    ### Hermes
+    - Sizes for Hermes should remain exact as per style (Picotin, Constance, Lindy, Evelyne, Herbag, Jypsiere, Bride-a-Brac, Jige, 24/24, Bolide, Garden Party, Roulis, Verrou, Della Cavalleria, Geta, In The Loop, Hac a Dos)
+    - **Do not convert Hermès sizes to XS/S/M/L. Use exact label.**
     
-    ### Hermès
-    For Hermès, normalize size depending on the **style name**. **Always return the exact size label** as listed:
+    7. Watches
+    - Extract model info from **reference number**, not title.
+    - Include dial color if available.
+    - Correct gender based on reference number, not title.
     
-    Picotin:
-    - Micro → Micro
-    - 18 → 18
-    - 22 → 22
-    - 26 → 26
-    
-    Constance:
-    - Micro 14 → Micro 14
-    - Mini 18 → Mini 18
-    - 24 → 24
-    - Elan → Elan
-    - To Go Wallet → To Go Wallet
-    - Long Wallet → Long Wallet
-    - Slim Wallet → Slim Wallet
-    
-    Lindy:
-    - Mini 20 → Mini 20
-    - 26 → 26
-    - 30 → 30
-    - 34 → 34
-    
-    Evelyne:
-    - TPM 16 → TPM 16
-    - PM 29 → PM 29
-    - GM 33 → GM 33
-    - TPM 40 → TPM 40
-    
-    Herbag:
-    - 20 Mini → 20 Mini
-    - 31 → 31
-    - 39 → 39
-    - Cabine → Cabine
-    
-    Jypsiere:
-    - Mini → Mini
-    - 28 → 28
-    - 31 → 31
-    - 34 → 34
-    - 37 → 37
-    
-    Bride-a-Brac:
-    - Small → Small
-    - Large → Large
-    
-    Jige:
-    - Duo Mini → Duo Mini
-    - Elan 29 → Elan 29
-    
-    24/24:
-    - 21 Mini → 21 Mini
-    - 29 → 29
-    - 35 → 35
-    
-    Bolide:
-    - 20 Mini → 20 Mini
-    - 27 → 27
-    - 31 → 31
-    - 35 → 35
-    - 45 → 45
-    
-    Garden Party:
-    - 30 → 30
-    - 36 → 36
-    
-    Roulis:
-    - Mini 18 → Mini 18
-    - 23 → 23
-    
-    Verrou:
-    - Mini Chaine → Mini Chaine
-    - 23 → 23
-    
-    Della Cavalleria:
-    - Mini → Mini
-    
-    Geta:
-    - One Size → One Size
-    
-    In The Loop:
-    - 18 → 18
-    - 23 → 23
-    
-    Hac a Dos:
-    - PM → PM
-    - GM → GM
-    
-    Important: **Do not convert Hermès sizes to numeric-only or XS/S/M/L. Always use the exact label.**
-    
-    7. Reference data:
+    8. Reference data:
     
     Brands: {', '.join(luxury_data['brands'])}
     Sizes: {', '.join(luxury_data['sizes'])}
@@ -230,9 +138,10 @@ def correct_luxury_title(product_title: str) -> dict:
           "gender": "value or null",
           "case_diameter": "value or null"
       }},
-      "corrected_title": "Final corrected title with normalized size and subcategory"
+      "corrected_title": "Final corrected title with normalized size, subcategory, 'Bag' suffix, and color deduplication"
     }}
     """
+
 
 
     model = genai.GenerativeModel("gemini-2.5-pro")
@@ -260,15 +169,10 @@ def correct_luxury_title(product_title: str) -> dict:
             if attrs["subcategory"].lower() in ["handbag", "bucket bag", "Top Handle Bag"]:
                 attrs["subcategory"] = "Shoulder Bag"
 
-        # Size mapping
-        size_map = {"PM": "18", "MM": "22", "GM": "30"}
-        if attrs.get("size") in size_map:
-            attrs["size"] = size_map[attrs["size"]]
 
         # Update corrected title too
         corrected_title = result_json.get("corrected_title", "")
-        for k, v in size_map.items():
-            corrected_title = corrected_title.replace(f" {k}", f" {v}")
+
         corrected_title = corrected_title.replace("Handbag", "Shoulder Bag")
         corrected_title = corrected_title.replace("Bucket Bag", "Shoulder Bag")
 
