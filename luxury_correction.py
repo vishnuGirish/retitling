@@ -59,11 +59,23 @@ def correct_luxury_title(product_title: str) -> dict:
        dial_color, case_material, gender, case_diameter.
        Use null if missing.
     
-    3. Generate a corrected luxury product title using official naming conventions:
-       - Handbags: Brand → Style → Size → Color → Material → Subcategory → always end with 'Bag' if missing
-       - Shoes: Brand → Style → Size → Color → Material → Subcategory
-       - Watches: Use reference number to extract exact model information; include Brand → Style → Model Name → Model Reference Number → Dial Color → Case Material → Gemstone → Gender → Wristwatch → Case Diameter
-       - Fine Jewelry: Brand → Style → Serial Number → Movement → Dial Color → Material → Gender → Category → Case Size
+    3. Generate a corrected luxury product title using **official naming conventions**:
+
+    ### Handbags:
+    Format → Brand → Style → Size → Color → Material → Subcategory → always end with "Bag" if missing
+
+    ### Shoes:
+    Format → Brand → Style → Size → Color → Material → Subcategory
+
+    ### Watches:
+    Format → Brand → Style → Model Name → Model Reference Number → Movement → Chronograph (if applicable) → Dial Color → Case Material → Gemstone → Gender → Wristwatch → Case Diameter
+    - The word **“Chronograph”** must appear **after the movement**, not next to the style.
+        Example: `IWC Aquatimer IW376805 Automatic Chronograph Black Dial Stainless Steel Men's Wristwatch 44mm`
+    - **Do not include “and”** between materials such as "Stainless Steel" and "Yellow Gold".
+        Example: `Jaeger-LeCoultre Reverso Classique 261.5.08 Silver Dial Stainless Steel 18k Yellow Gold Women's Wristwatch 20mm`
+
+    ### Fine Jewelry:
+    Format → Brand → Style → Serial Number → Movement → Dial Color → Material → Gender → Category → Case Size
     
     4. Important rules:
        - Always expand the material to its **full official name** (e.g., "Clemence" → "Taurillon Clémence Leather", "Togo" → "Togo Calfskin Leather").
