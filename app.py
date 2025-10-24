@@ -405,7 +405,7 @@ with tab1:
                     
                     to_process = [(idx, row[name_col]) for idx, row in df.iterrows() if pd.isna(row[title_col])]
                     
-                    with ThreadPoolExecutor(max_workers=50) as executor:
+                    with ThreadPoolExecutor(max_workers=20) as executor:
                         futures = [executor.submit(process_row, idx, name) for idx, name in to_process]
                         
                         for i, future in enumerate(as_completed(futures)):
